@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Average Patient</title>
+<meta name="description" content="Do simulated psychiatric patients answer like real people? We compare 17 language models with real questionnaire respondents who report the same total score.">
+<meta property="og:title" content="The Average Patient">
+<meta property="og:description" content="Do simulated psychiatric patients answer like real people? We compare 17 language models with real questionnaire respondents who report the same total score.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://weixiang-sun.github.io/average-patient/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&display=swap">
+<style>
+/* Layout: one centred reading column (680px) like a research post; interactive figures widen to 960px on a soft panel. */
+:root {
+  --bg: #FAF9F5;
+  --panel: #F0EEE6;
+  --sheet: #FAF9F5;
+  --ink: #141413;
+  --ink-2: #5E5D59;
+  --ink-3: #87857D;
+  --rule: #DCD9CE;
+  --clay: #D97757;
+  --clay-ink: #B04F2C;
+  --on-ink: #FAF9F5;
+  --f-serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --f-ui: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --measure: 680px;
+  --wide: 960px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1B1A18; --panel: #262522; --sheet: #1F1E1C; --ink: #F0EEE6; --ink-2: #BDBAAF; --ink-3: #8F8C83;
+    --rule: #3C3B37; --clay: #E0866A; --clay-ink: #EE9E82; --on-ink: #1B1A18; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1B1A18; --panel: #262522; --sheet: #1F1E1C; --ink: #F0EEE6; --ink-2: #BDBAAF; --ink-3: #8F8C83;
+  --rule: #3C3B37; --clay: #E0866A; --clay-ink: #EE9E82; --on-ink: #1B1A18; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--f-serif); font-size: 1.1875rem; line-height: 1.62; font-optical-sizing: auto;
+  padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px));
+}
+main { max-width: var(--wide); margin: 0 auto; padding-block: 64px 40px; }
+.col { max-width: var(--measure); margin-inline: auto; }
+a { color: var(--clay-ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--clay); outline-offset: 2px; border-radius: 4px; }
+p { margin: 0 0 1em; }
+strong { font-weight: 600; }
+
+/* hero */
+.hero h1 { font-size: clamp(2.8rem, 7.5vw, 4.6rem); line-height: 1.02; font-weight: 400; letter-spacing: -0.022em; margin: 0; text-wrap: balance; }
+.hero .dek { font-size: clamp(1.3rem, 2.8vw, 1.8rem); line-height: 1.25; color: var(--ink-2); margin: 16px 0 0; text-wrap: balance; }
+.authors { font-family: var(--f-ui); font-size: 1rem; line-height: 1.75; margin-top: 32px; }
+.authors a, .authors span.nolink { color: var(--ink); text-decoration-color: var(--rule); white-space: nowrap; }
+.authors a:hover { text-decoration-color: var(--ink-2); }
+.authors sup { font-size: .7em; color: var(--ink-2); margin-left: 1px; }
+.affil { font-family: var(--f-ui); font-size: .875rem; line-height: 1.6; color: var(--ink-2); margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.affil sup { margin-right: 3px; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+.btn {
+  font-family: var(--f-ui); font-size: .9375rem; font-weight: 500; line-height: 1;
+  display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 8px;
+  border: 1px solid var(--ink); background: var(--ink); color: var(--on-ink); text-decoration: none;
+}
+.btn:hover { text-decoration: none; opacity: .88; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--rule); }
+.btn.ghost:hover { border-color: var(--ink-2); opacity: 1; }
+.btn[aria-disabled="true"] { background: transparent; color: var(--ink-3); border: 1px dashed var(--rule); cursor: default; }
+.btn small { font-size: .8125rem; color: inherit; opacity: .8; font-weight: 400; }
+.lede { font-size: 1.375rem; line-height: 1.5; margin-top: 44px; }
+
+/* sections */
+section { margin-top: 96px; }
+h2 { font-weight: 400; font-size: clamp(1.7rem, 3.6vw, 2.25rem); line-height: 1.15; letter-spacing: -0.012em; margin: 0 0 18px; text-wrap: balance; }
+h3 { font-family: var(--f-ui); font-weight: 600; font-size: 1rem; letter-spacing: .01em; margin: 40px 0 10px; }
+.eyebrow { font-family: var(--f-ui); font-size: .75rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 14px; }
+ul.plain { padding-left: 1.1em; margin: 0 0 1em; }
+ul.plain li { margin-bottom: .45em; padding-left: .2em; }
+
+/* figure panels */
+.fig { max-width: var(--wide); margin: 36px auto 0; background: var(--panel); border-radius: 14px; padding: clamp(16px, 3.2vw, 32px); }
+.fig-head { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.fig-title { font-family: var(--f-ui); font-weight: 600; font-size: .9375rem; line-height: 1.35; }
+.caption { font-family: var(--f-ui); font-size: .875rem; line-height: 1.55; color: var(--ink-2); margin: 16px 0 0; max-width: 74ch; }
+.chart { width: 100%; position: relative; }
+.chart svg { display: block; max-width: 100%; overflow: visible; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--f-ui); font-size: .8125rem; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.sw { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.sw.model { background: var(--clay); }
+.sw.people { background: var(--ink); }
+
+/* controls */
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 9px; padding: 3px; background: var(--sheet); gap: 2px; }
+.seg button { font: 500 .875rem/1 var(--f-ui); border: 0; background: transparent; color: var(--ink-2); padding: 9px 13px; border-radius: 6px; cursor: pointer; }
+.seg button:hover { color: var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); }
+.field { display: inline-flex; align-items: center; gap: 10px; font-family: var(--f-ui); font-size: .875rem; color: var(--ink-2); }
+select {
+  font: 500 .875rem var(--f-ui); color: var(--ink); background: var(--sheet); border: 1px solid var(--rule);
+  border-radius: 8px; padding: 8px 30px 8px 11px; appearance: none; cursor: pointer; max-width: 100%;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-2) 50%), linear-gradient(135deg, var(--ink-2) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%; background-size: 5px 5px; background-repeat: no-repeat;
+}
+
+/* answer sheets */
+.key { font-family: var(--f-ui); font-size: .8125rem; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 14px; }
+.key b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; margin-right: 4px; }
+.sheets { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 14px; }
+.sheet { background: var(--sheet); border-radius: 10px; padding: 14px 14px 12px; }
+.sheet-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-family: var(--f-ui); margin-bottom: 8px; }
+.sheet-name { font-weight: 600; font-size: .9375rem; }
+.sheet-total { font-size: .875rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.sheet-total b { color: var(--ink); font-weight: 600; }
+.qrow { display: grid; grid-template-columns: 1fr repeat(4, 30px); gap: 4px; align-items: center; padding: 2px 0; font-family: var(--f-ui); font-size: .84rem; }
+.qrow .lab { line-height: 1.25; padding-right: 6px; }
+.qrow .lab i { font-style: normal; color: var(--ink-3); font-variant-numeric: tabular-nums; display: inline-block; width: 1.3em; }
+.cell {
+  height: 27px; border-radius: 6px; border: 1px solid var(--rule); background: transparent; padding: 0;
+  font: 500 .8rem var(--f-ui); color: var(--ink-3); cursor: pointer; font-variant-numeric: tabular-nums;
+}
+.cell:hover { border-color: var(--ink-2); color: var(--ink); }
+.cell.fill { background: color-mix(in srgb, var(--ink) 13%, transparent); border-color: transparent; color: var(--ink-2); }
+.cell.on { background: var(--ink); border-color: var(--ink); color: var(--on-ink); }
+.sheet-stats { display: flex; flex-wrap: wrap; gap: 4px 16px; font-family: var(--f-ui); font-size: .8125rem; color: var(--ink-2); margin-top: 10px; font-variant-numeric: tabular-nums; }
+.readout { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 14px; margin-top: 14px; }
+.stat { background: var(--sheet); border-radius: 10px; padding: 14px 16px; font-family: var(--f-ui); }
+.stat .k { font-size: .8125rem; color: var(--ink-2); }
+.stat .v { font-family: var(--f-serif); font-size: 2.4rem; line-height: 1.1; font-variant-numeric: tabular-nums; margin-top: 4px; }
+.stat .s { font-size: .8125rem; color: var(--ink-2); margin-top: 4px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.note { font-family: var(--f-ui); font-size: .875rem; color: var(--ink-2); margin-top: 12px; min-height: 1.4em; }
+
+/* definitions */
+.defs { display: grid; grid-template-columns: 9.5rem 1fr; gap: 14px 24px; margin: 28px 0 0; }
+.defs dt { font-family: var(--f-ui); font-weight: 600; font-size: .9375rem; padding-top: 3px; }
+.defs dd { margin: 0; }
+@media (max-width: 560px) { .defs { grid-template-columns: 1fr; gap: 2px; } .defs dd { margin-bottom: 14px; } }
+
+/* tables */
+.tbl-wrap { overflow-x: auto; margin-top: 8px; }
+.tbl { width: 100%; border-collapse: collapse; font-family: var(--f-ui); font-size: .875rem; font-variant-numeric: tabular-nums; }
+.tbl th, .tbl td { padding: 8px 10px; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+.tbl th { font-weight: 600; color: var(--ink-2); font-size: .8125rem; }
+.tbl td.n, .tbl th.n { text-align: right; white-space: nowrap; }
+.big-tbl { font-size: .9375rem; }
+.big-tbl td.n { font-size: 1rem; }
+.big-tbl th.n { white-space: normal; }
+.big-tbl td:first-child { min-width: 10rem; }
+@media (max-width: 560px) { .big-tbl th, .big-tbl td { padding: 8px 6px; } }
+details { margin-top: 14px; font-family: var(--f-ui); font-size: .875rem; }
+summary { cursor: pointer; color: var(--ink-2); width: fit-content; }
+summary:hover { color: var(--ink); }
+
+/* chart text */
+.ax { fill: var(--ink-3); font: 400 11.5px var(--f-ui); font-variant-numeric: tabular-nums; }
+.lbl { fill: var(--ink); font: 500 12.5px var(--f-ui); }
+.lbl2 { fill: var(--ink-3); font: 400 11px var(--f-ui); }
+.grp { fill: var(--ink-3); font: 600 10.5px var(--f-ui); letter-spacing: .08em; text-transform: uppercase; }
+.val { fill: var(--ink-2); font: 500 11.5px var(--f-ui); font-variant-numeric: tabular-nums; }
+.gridl { stroke: var(--rule); stroke-width: 1; }
+.refl { stroke: var(--ink-2); stroke-width: 1.25; stroke-dasharray: 3 3; }
+.hit { fill: transparent; cursor: pointer; }
+
+/* tooltip */
+#tip {
+  position: fixed; z-index: 20; left: 0; top: 0; pointer-events: none; background: var(--ink); color: var(--on-ink);
+  font: 400 .8125rem/1.45 var(--f-ui); padding: 8px 11px; border-radius: 8px; max-width: 270px;
+  opacity: 0; transform: translateY(4px); transition: opacity .12s ease, transform .12s ease;
+}
+#tip.show { opacity: 1; transform: none; }
+#tip b { font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { #tip { transition: none; } }
+
+footer { max-width: var(--measure); margin: 110px auto 0; padding-block: 24px 48px; border-top: 1px solid var(--rule); font-family: var(--f-ui); font-size: .8125rem; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 6px 20px; justify-content: space-between; }
+footer a { color: var(--ink-2); }
+pre.cite { font: 400 .8125rem/1.55 ui-monospace, "SFMono-Regular", Menlo, monospace; background: var(--panel); padding: 16px; border-radius: 10px; overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+
+<header class="hero col">
+  <h1>The Average Patient</h1>
+  <p class="dek">Do Simulated Psychiatric Patients Answer Like Real People?</p>
+  <div class="authors">
+    <a href="https://weixiang-sun.github.io/">Weixiang Sun</a><sup>1</sup>,
+    <a href="https://zehong-wang.github.io/">Zehong Wang</a><sup>1†</sup>,
+    <a href="https://shiiiikw.github.io/">Kaiwang Shi</a><sup>1</sup>,
+    <a href="https://hongh0.github.io/">Hong Huang</a><sup>2</sup>,
+    <a href="https://www.linkedin.com/in/colby-p-nelson/">Colby Nelson</a><sup>1</sup>,
+    <a href="https://yiyang-ian-li.github.io/">Yiyang Li</a><sup>1</sup>,
+    <a href="http://yes-lab.org/">Yanfang Ye</a><sup>1†</sup>
+  </div>
+  <div class="affil"><span><sup>1</sup>University of Notre Dame</span><span><sup>2</sup>Simon Fraser University</span><span><sup>†</sup>Corresponding authors</span></div>
+  <div class="actions">
+    <span class="btn" aria-disabled="true">Paper <small>arXiv, coming soon</small></span>
+    <a class="btn" href="https://github.com/Weixiang-Sun/average-patient">Code</a>
+    <a class="btn ghost" href="#citation">Citation</a>
+  </div>
+  <p class="lede">Language models are used as simulated psychiatric patients to train clinicians and to evaluate AI therapists and assessment agents. They are usually judged by how plausible their transcripts look or by their total scores. We compare their questionnaire answers item by item with those of real people who report the same total. Across 17 models, simulated patients vary 1.5 to 11 times less than real respondents with the same total and endorse nearly every symptom at a middling level.</p>
+</header>
+
+<section id="same-score">
+  <div class="col">
+    <h2>Same score, different symptoms</h2>
+    <p>A questionnaire total measures how severe the symptoms are. It does not say which symptoms make up the score. On the PHQ-9, a nine-item depression questionnaire, two people can both score 15 while one sleeps badly and has lost interest in things and the other feels worthless and cannot concentrate. Clinicians meet this range of presentations, and an assessment agent has to recognise which symptoms a patient has. A simulated patient used for training or testing should show the same range.</p>
+  </div>
+  <div class="fig" id="fig-sheets">
+    <div class="fig-head">
+      <div class="fig-title">Two PHQ-9 answer sheets</div>
+      <div class="seg" role="group" aria-label="Example pair">
+        <button type="button" id="pre-different" data-preset="different" aria-pressed="true">Different symptoms</button>
+        <button type="button" id="pre-average" data-preset="average" aria-pressed="false">Two average patients</button>
+      </div>
+    </div>
+    <div class="key" aria-hidden="true"><span><b>0</b>Not at all</span><span><b>1</b>Several days</span><span><b>2</b>More than half the days</span><span><b>3</b>Nearly every day</span></div>
+    <div class="sheets">
+      <div class="sheet" id="sheet-a"></div>
+      <div class="sheet" id="sheet-b"></div>
+    </div>
+    <div class="readout">
+      <div class="stat"><div class="k">Distance between the two sheets</div><div class="v" id="dist-v">16</div><div class="s" id="dist-s"></div></div>
+      <div class="stat"><div class="k" id="count-k">Answer sheets with this total</div><div class="v" id="count-v">27,876</div><div class="s" id="count-s">of 262,144 possible PHQ-9 answer sheets</div></div>
+    </div>
+    <div class="note" id="sheet-note" aria-live="polite"></div>
+    <p class="caption">Example sheets for illustration, not study data. Click a cell to change an answer. The distance adds up the item-by-item differences between the two sheets; diversity in the paper is the average of this distance over pairs of respondents with the same total.</p>
+  </div>
+</section>
+
+<section id="method">
+  <div class="col">
+    <h2>How we compare</h2>
+    <p>Each model is compared with real respondents at exactly the model's totals. This separates how a total is made up from how high it is. At each total we measure:</p>
+    <dl class="defs">
+      <dt>Diversity</dt><dd>the average item-by-item distance between two responses with the same total, as in the sheets above.</dd>
+      <dt>Composition</dt><dd>how many symptoms a response endorses, and how often it answers “not at all”.</dd>
+      <dt>Separability</dt><dd>how well a logistic regression on the item scores tells simulated from real responses, as an AUC. An AUC of 0.5 means the two cannot be told apart.</dd>
+      <dt>Structure</dt><dd>whether symptoms that go together in real respondents, such as the somatic symptoms of depression, also go together in simulated ones.</dd>
+    </dl>
+    <p style="margin-top:24px">The 17 models include GPT, Claude, Gemini, Grok, Llama, Kimi, Mistral and Phi models. Each answers each questionnaire 50 times per condition, with the item order shuffled. The human references are public item-level data from eight samples, including the NHANES PHQ-9 for 41,714 US adults, a clinical sample and a study in which people were told to feign a disorder.</p>
+  </div>
+</section>
+
+<section id="hypothesis">
+  <div class="col">
+    <h2>The average-patient hypothesis</h2>
+    <p>A simulated patient usually receives a short persona that names a condition and a severity, and the persona is the model's only information about the patient. We hypothesise that the model then answers each item at the level typical of that item for the named condition and severity. On the PHQ-9 every item is a core symptom of depression, so one level serves all nine items.</p>
+    <p>The hypothesis predicts that simulated patients vary little, endorse nearly every symptom and give totals at or above the top of the stated severity band. An information budget sets a further limit. Simulated patients can differ only through information that the persona carries into their answers or through the randomness of single answers, and a persona that names one of four severities carries at most 2 bits.</p>
+  </div>
+  <div class="fig" id="fig-severity">
+    <div class="fig-head">
+      <div class="fig-title">PHQ-9 total told a severity</div>
+      <div class="seg" role="group" aria-label="Severity">
+        <button type="button" id="sev-mild" data-sev="mild" aria-pressed="false">Mild</button>
+        <button type="button" id="sev-moderate" data-sev="moderate" aria-pressed="true">Moderate</button>
+        <button type="button" id="sev-severe" data-sev="severe" aria-pressed="false">Severe</button>
+      </div>
+    </div>
+    <div class="chart" id="sev-chart"></div>
+    <p class="note" id="sev-note" aria-live="polite" style="font-size:.9375rem;color:var(--ink)"></p>
+    <p class="caption">PHQ-9 severity bands. Triangle: the total if every item is answered at the hypothesised level. Dot: the median total of the 17 models told this severity. Each model's totals lie above the band of a mild to moderately severe label in 61 to 100% of its responses.</p>
+  </div>
+</section>
+
+<section id="variation">
+  <div class="col">
+    <h2>Variation at matched totals</h2>
+    <p>We apply one matched-total comparison to eight questionnaires in nine human references, covering depression, anxiety, general distress, somatic symptoms, obsessive-compulsive symptoms, post-traumatic stress and eating disorders. Real respondents with the same total are 1.5 to 11 times more varied than every model. Choose a model to see where it falls on each questionnaire.</p>
+  </div>
+  <div class="fig" id="fig-diversity">
+    <div class="fig-head">
+      <div class="fig-title">How many times more varied real respondents are</div>
+      <label class="field" for="div-model">Model
+        <select id="div-model"><option value="-1">All models</option></select>
+      </label>
+    </div>
+    <div class="chart" id="div-chart"></div>
+    <p class="caption">Ratio of real to simulated diversity at matched totals, on a log scale; each dot is one model. A ratio of 1 means simulated patients vary as much as real respondents. COACH is a clinical sample of older adults in rural China. The postpartum PCL-5 reference is not shown because fewer than five totals carry its ratio.</p>
+    <details><summary>Show the numbers</summary><div class="tbl-wrap" id="div-table"></div></details>
+  </div>
+  <div class="col" style="margin-top:44px">
+    <p>Simulated patients spread a total over more symptoms. At PHQ-9 totals 15 to 24 and GAD-7 totals 12 to 19, models endorse all of PHQ-9 items 1 to 8, or all seven GAD-7 items, in 99 to 100% of responses, against 47 to 62% of real respondents with the same totals. On the PHQ-9 they answer “not at all” in 0 to 4.5% of answers, against 10 to 15% for real respondents. Item scores alone separate simulated from real responses with an AUC of 0.68 to 0.86, against 0.56 for two real samples.</p>
+  </div>
+  <div class="fig" id="fig-composition">
+    <div class="fig-head">
+      <div class="fig-title">Composition at the same totals</div>
+      <div class="legend"><span><i class="sw model"></i>17 models</span><span><i class="sw people"></i>Real respondents</span></div>
+    </div>
+    <div class="chart" id="comp-chart"></div>
+    <p class="caption">Range over models; real respondents at each model's totals, range over models. Every item: PHQ-9 items 1 to 8 at totals 15 to 24 and GAD-7 at 12 to 19. “Not at all”: PHQ-9 at totals 15 to 24.</p>
+  </div>
+</section>
+
+<section id="feigning">
+  <div class="col">
+    <h2>Comparison with people told to feign</h2>
+    <p>Clinical psychology studies imitation by asking healthy people to feign a disorder and comparing their answers with those of patients. A public study gave the PCL-5, a 20-item checklist of post-traumatic symptoms, to injured students, to uninjured students answering honestly and to uninjured students told to feign an injury to earn a tuition deduction. We asked each model to play an injured student.</p>
+    <p>Compared with injured students who have the same totals, the people told to feign answer “not at all” 0.90 times as often. Every model answers “not at all” at most 0.37 times as often. Told to feign, people do not raise their total, whereas 15 of 17 models raise both their total and their share of “extremely” answers.</p>
+  </div>
+  <div class="fig" id="fig-feign">
+    <div class="fig-head">
+      <div class="fig-title">“Not at all” answers relative to genuine patients with the same totals</div>
+      <div class="legend"><span><i class="sw people"></i>People</span><span><i class="sw model"></i>Models</span></div>
+    </div>
+    <div class="chart" id="feign-chart"></div>
+    <p class="caption">PCL-5, with 95% bootstrap intervals. A value of 1 means a group answers “not at all” as often as genuinely injured students with the same totals. Hover over a row for the underlying rates.</p>
+    <details><summary>Show the numbers</summary><div class="tbl-wrap" id="feign-table"></div></details>
+  </div>
+</section>
+
+<section id="single-answers">
+  <div class="col">
+    <h2>Single answers</h2>
+    <p>As the hypothesis requires, single answers are highly concentrated. Across the 50 responses a model gives to one severity, the entropy of each item's answers averages 0.29 to 0.73 bits, out of at most 2, against 1.15 to 1.51 bits for real respondents with the same totals. Asked an item on its own, the most likely answer is the level the hypothesis names for 63 to 85% of items. Forms assembled item by item from the models' answer distributions are at most 32% distinct on average, against 69 to 92% for the same procedure on real respondents.</p>
+  </div>
+  <div class="fig" id="fig-entropy">
+    <div class="fig-head">
+      <div class="fig-title">Entropy of single answers, PHQ-9</div>
+      <div class="legend"><span><i class="sw model"></i>17 models</span><span><i class="sw people"></i>Real respondents</span></div>
+    </div>
+    <div class="chart" id="ent-chart"></div>
+    <p class="caption">Average entropy of an item's answers within one severity, in bits, range over models; real respondents at the same totals as each model. A four-option item has at most 2 bits.</p>
+  </div>
+</section>
+
+<section id="remedies">
+  <div class="col">
+    <h2>Prompt changes and published personas</h2>
+    <p>On seven models we tried the changes a simulator designer would try first, and the personas of two published simulators: the 12 clinician-validated depression personas of TalkDep and the 400 client intake forms of CACTUS. Each change raises diversity, and the largest gain, from adding five real answer sheets, reaches 48% of real diversity. Larger models in a family and reasoning do not reliably raise diversity, and none of 52 model and setting configurations exceeds 57% of real diversity.</p>
+  </div>
+  <div class="fig" id="fig-remedies">
+    <div class="fig-head">
+      <div class="fig-title" id="rem-title">Diversity, % of real respondents</div>
+      <div class="seg" role="group" aria-label="Measure">
+        <button type="button" id="rem-div" data-metric="div" aria-pressed="true">Diversity</button>
+        <button type="button" id="rem-auc" data-metric="auc" aria-pressed="false">Separability</button>
+      </div>
+    </div>
+    <div class="chart" id="rem-chart"></div>
+    <p class="caption" id="rem-caption"></p>
+    <details><summary>Show the numbers</summary><div class="tbl-wrap" id="rem-table"></div></details>
+  </div>
+</section>
+
+<section id="interviews">
+  <div class="col">
+    <h2>Interviews and an assessment agent</h2>
+    <p>Simulated patients are mostly used in conversation. We interviewed seven patient models with a fixed script that covers the nine PHQ-9 symptoms, and another model rated the PHQ-9 from each transcript. Each patient was told a severity or was given a real NHANES symptom profile as private background.</p>
+  </div>
+  <div class="fig" id="fig-interview-table">
+    <div class="fig-head"><div class="fig-title">Interviews, PHQ-9 items 1 to 8 rated from the transcript</div></div>
+    <div class="tbl-wrap">
+      <table class="tbl big-tbl">
+        <thead><tr><th></th><th class="n">Told a severity</th><th class="n">Given a real profile</th></tr></thead>
+        <tbody>
+          <tr><td>Interviews rated as having all eight symptoms</td><td class="n">97.5–100%</td><td class="n">35–40%</td></tr>
+          <tr><td>Symptoms rated absent</td><td class="n">0–0.3%</td><td class="n">15–17%</td></tr>
+          <tr><td>Diversity between interviews</td><td class="n">0.36–1.01</td><td class="n">3.30–4.91</td></tr>
+          <tr><td>Placed in the patient's severity band</td><td class="n">20–26%</td><td class="n">42–61%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="caption">Ranges over patient models and two model raters. The real profiles lack 18.8% of symptoms 1 to 8.</p>
+  </div>
+  <div class="col" style="margin-top:44px">
+    <p>Patients told a severity are rated as having nearly every symptom. On them, an agent that recognises absent symptoms and an agent that reports every symptom present get the same score, so this skill goes untested. Having the model word a real profile restores half to two thirds of the variation of the profiles.</p>
+    <p>We treated the interviewer and the rater as an assessment agent and scored it as benchmarks do, against what each patient was given. Patients told they are mildly to moderately severely depressed are rated above that band in 99 to 100% of interviews, so the agent places only 20 to 26% of patients told a severity in their band, against 42 to 61% of patients given a real profile. Five human raters who rated 64 of the transcripts show the same pattern.</p>
+  </div>
+  <div class="fig" id="fig-agent">
+    <div class="fig-head">
+      <div class="fig-title">Interviews placed in the patient's severity band</div>
+      <div class="legend"><span><i class="sw model"></i>Patient told a severity</span><span><i class="sw people"></i>Patient given a real profile</span></div>
+    </div>
+    <div class="chart" id="agent-chart"></div>
+    <p class="caption">Per patient model. GPT-4.1 and Claude Haiku 4.5 were run only with a severity. Bottom rows: the 64 transcripts that five human raters also rated, with severities weighted equally; human raters, mean over raters.</p>
+  </div>
+</section>
+
+<section id="recommendations">
+  <div class="col">
+    <h2>Recommendations</h2>
+    <ul class="plain">
+      <li>Evaluate simulated patients item by item at matched totals, including how items covary.</li>
+      <li>Score assessment agents against the symptom profile the patient was given.</li>
+      <li>Ground simulated patients in real symptom profiles, or in profiles sampled from an item response model where real ones cannot be used.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="code">
+  <div class="col">
+    <h2>Code and data</h2>
+    <p>The code for the model runs, the measures and the analyses is on <a href="https://github.com/Weixiang-Sun/average-patient">GitHub</a>. The human reference data are public and are not redistributed; the repository README lists their sources. Model responses and the human ratings of interview transcripts are not released.</p>
+  </div>
+</section>
+
+<section id="citation">
+  <div class="col">
+    <h2>Citation</h2>
+    <p>A BibTeX entry will be added with the arXiv version.</p>
+  </div>
+</section>
+
+</main>
+<footer>
+  <span>The Average Patient, 2026</span>
+  <span>Numbers on this page come from the paper's tables. <a href="https://github.com/Weixiang-Sun/average-patient">Code</a></span>
+</footer>
+<div id="tip" role="tooltip"></div>
+
+<script>
+(function () {
+  "use strict";
+  var NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function txt(parent, x, y, s, cls, anchor) {
+    var t = el("text", { x: x, y: y, "class": cls, "text-anchor": anchor || "start" }, parent);
+    t.textContent = s;
+    return t;
+  }
+  function h(tag, attrs, html) {
+    var e = document.createElement(tag);
+    for (var k in attrs || {}) e.setAttribute(k, attrs[k]);
+    if (html != null) e.innerHTML = html;
+    return e;
+  }
+  var cssVar = function (n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); };
+  var fmtInt = function (n) { return n.toLocaleString("en-US"); };
+
+  /* tooltip */
+  var tip = document.getElementById("tip");
+  function moveTip(ev) {
+    var pad = 14, x = ev.clientX + pad, y = ev.clientY + pad, r = tip.getBoundingClientRect();
+    if (x + r.width > window.innerWidth - 8) x = ev.clientX - r.width - pad;
+    if (y + r.height > window.innerHeight - 8) y = ev.clientY - r.height - pad;
+    tip.style.left = Math.max(8, x) + "px"; tip.style.top = Math.max(8, y) + "px";
+  }
+  function showTip(html, ev) { tip.innerHTML = html; tip.classList.add("show"); moveTip(ev); }
+  function hideTip() { tip.classList.remove("show"); }
+  function hover(node, html) {
+    node.addEventListener("pointerenter", function (e) { showTip(html, e); });
+    node.addEventListener("pointermove", moveTip);
+    node.addEventListener("pointerleave", function (e) { if (e.pointerType !== "touch") hideTip(); });
+    node.addEventListener("pointerdown", function (e) { e.stopPropagation(); showTip(html, e); });
+  }
+  document.addEventListener("pointerdown", hideTip);
+  window.addEventListener("scroll", hideTip, { passive: true });
+
+  function responsive(host, draw) {
+    var last = 0;
+    function run() { var w = Math.floor(host.clientWidth); if (w && w !== last) { last = w; draw(w); } }
+    if ("ResizeObserver" in window) new ResizeObserver(run).observe(host);
+    else window.addEventListener("resize", run);
+    run();
+    return function () { last = 0; run(); };
+  }
+  function pressed(group, btn) {
+    group.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", b === btn ? "true" : "false"); });
+  }
+
+  /* ---------- 1. answer sheets ---------- */
+  var ITEMS = ["Little interest or pleasure", "Feeling down or hopeless", "Sleep problems", "Tired or little energy",
+    "Poor appetite or overeating", "Feeling bad about yourself", "Trouble concentrating", "Moving slowly or restless",
+    "Thoughts of death or self-harm"];
+  var OPTS = ["Not at all", "Several days", "More than half the days", "Nearly every day"];
+  var PRESETS = {
+    different: { a: [3, 2, 3, 3, 2, 0, 1, 1, 0], b: [2, 3, 0, 1, 0, 3, 3, 2, 1], names: ["Patient A", "Patient B"] },
+    average: { a: [2, 2, 2, 2, 2, 2, 2, 2, 1], b: [2, 2, 2, 2, 2, 1, 2, 2, 2], names: ["Simulated patient A", "Simulated patient B"] }
+  };
+  var COUNTS = (function () {
+    var dp = [1];
+    for (var k = 0; k < 9; k++) {
+      var nd = new Array(dp.length + 3).fill(0);
+      dp.forEach(function (v, i) { for (var a = 0; a <= 3; a++) nd[i + a] += v; });
+      dp = nd;
+    }
+    return dp;
+  })();
+  function band(t) {
+    return t < 5 ? "none or minimal (0 to 4)" : t < 10 ? "mild (5 to 9)" : t < 15 ? "moderate (10 to 14)" : t < 20 ? "moderately severe (15 to 19)" : "severe (20 to 27)";
+  }
+  var sheets = { a: PRESETS.different.a.slice(), b: PRESETS.different.b.slice() };
+  var names = PRESETS.different.names.slice();
+  var cells = { a: [], b: [] };
+  var segSheets = document.querySelector("#fig-sheets .seg");
+
+  ["a", "b"].forEach(function (key) {
+    var box = document.getElementById("sheet-" + key);
+    var head = h("div", { "class": "sheet-head" });
+    head.appendChild(h("span", { "class": "sheet-name", id: "name-" + key }));
+    head.appendChild(h("span", { "class": "sheet-total", id: "total-" + key }));
+    box.appendChild(head);
+    ITEMS.forEach(function (item, i) {
+      var row = h("div", { "class": "qrow" });
+      row.appendChild(h("div", { "class": "lab" }, "<i>" + (i + 1) + "</i>" + item));
+      cells[key][i] = [];
+      for (var v = 0; v <= 3; v++) {
+        var b = h("button", { type: "button", "class": "cell", id: "c-" + key + "-" + i + "-" + v,
+          "aria-label": item + ": " + OPTS[v], title: OPTS[v] }, String(v));
+        (function (i, v) {
+          b.addEventListener("click", function () {
+            sheets[key][i] = v;
+            segSheets.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+            updateSheets();
+          });
+        })(i, v);
+        row.appendChild(b);
+        cells[key][i][v] = b;
+      }
+      box.appendChild(row);
+    });
+    box.appendChild(h("div", { "class": "sheet-stats", id: "stats-" + key }));
+  });
+
+  function updateSheets() {
+    var tot = {};
+    ["a", "b"].forEach(function (key) {
+      var s = sheets[key], t = 0, endorsed = 0, zeros = 0;
+      s.forEach(function (v, i) {
+        t += v; if (v > 0) endorsed++; else zeros++;
+        for (var c = 0; c <= 3; c++) {
+          var b = cells[key][i][c];
+          b.classList.toggle("on", c === v);
+          b.classList.toggle("fill", c > 0 && c < v);
+          b.setAttribute("aria-pressed", c === v ? "true" : "false");
+        }
+      });
+      tot[key] = t;
+      document.getElementById("name-" + key).textContent = names[key === "a" ? 0 : 1];
+      document.getElementById("total-" + key).innerHTML = "Total <b>" + t + "</b>";
+      document.getElementById("stats-" + key).textContent = endorsed + " of 9 symptoms endorsed · " + zeros + " “not at all”";
+    });
+    var diffs = sheets.a.map(function (v, i) { return Math.abs(v - sheets.b[i]); });
+    var d = diffs.reduce(function (x, y) { return x + y; }, 0);
+    document.getElementById("dist-v").textContent = d;
+    document.getElementById("dist-s").textContent = diffs.join(" + ") + " = " + d;
+    var note = document.getElementById("sheet-note");
+    if (tot.a === tot.b) {
+      document.getElementById("count-k").textContent = "Answer sheets with a total of " + tot.a;
+      document.getElementById("count-v").textContent = fmtInt(COUNTS[tot.a]);
+      document.getElementById("count-s").textContent = "of 262,144 possible PHQ-9 answer sheets";
+      note.textContent = "Both sheets total " + tot.a + ", in the " + band(tot.a) + " band.";
+    } else {
+      document.getElementById("count-k").textContent = "Answer sheets with a total of " + tot.a;
+      document.getElementById("count-v").textContent = fmtInt(COUNTS[tot.a]);
+      document.getElementById("count-s").textContent = "of 262,144 possible; sheet B has a total of " + tot.b + " (" + fmtInt(COUNTS[tot.b]) + " sheets)";
+      note.textContent = "The totals differ (" + tot.a + " and " + tot.b + "). The paper compares responses only at equal totals.";
+    }
+  }
+  segSheets.querySelectorAll("button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var p = PRESETS[b.dataset.preset];
+      sheets.a = p.a.slice(); sheets.b = p.b.slice(); names = p.names.slice();
+      pressed(segSheets, b); updateSheets();
+    });
+  });
+  updateSheets();
+
+  /* ---------- 2. severity number line ---------- */
+  var SEV = {
+    mild: { band: [5, 9], level: 1, pred: 9, median: 12, name: "mildly",
+      note: "Every item at “several days” (1) gives a total of 9, the top of the mild band. Told they are mildly depressed, the models give a median total of 12, above the band." },
+    moderate: { band: [10, 14], level: 2, pred: 18, median: 17, name: "moderately",
+      note: "Every item at “more than half the days” (2) gives a total of 18, above the moderate band. Told they are moderately depressed, the models give a median total of 17." },
+    severe: { band: [20, 27], level: 3, pred: 27, median: 25, name: "severely",
+      note: "Every item at “nearly every day” (3) gives a total of 27, the top of the severe band. Told they are severely depressed, the models give a median total of 25." }
+  };
+  var BANDS = [[0, 4, "None", "None"], [5, 9, "Mild", "Mild"], [10, 14, "Moderate", "Mod."], [15, 19, "Moderately severe", "Mod. sev."], [20, 27, "Severe", "Severe"]];
+  var sev = "moderate";
+  var sevHost = document.getElementById("sev-chart");
+  var redrawSev = responsive(sevHost, function (w) {
+    sevHost.innerHTML = "";
+    var s = SEV[sev], narrow = w < 560, L = 10, R = 10, H = 128;
+    var svg = el("svg", { width: w, height: H, viewBox: "0 0 " + w + " " + H, role: "img",
+      "aria-label": "PHQ-9 bands with the hypothesised total " + s.pred + " and the models' median total " + s.median }, sevHost);
+    var X = function (v) { return L + (v / 27) * (w - L - R); };
+    var by = 38, bh = 18;
+    BANDS.forEach(function (b) {
+      var x0 = X(b[0] === 0 ? 0 : b[0] - 0.5), x1 = X(b[1] === 27 ? 27 : b[1] + 0.5);
+      var on = b[0] === s.band[0];
+      el("rect", { x: x0 + 1, y: by, width: Math.max(0, x1 - x0 - 2), height: bh, rx: 4,
+        fill: on ? cssVar("--clay") : cssVar("--rule"), "fill-opacity": on ? 0.32 : 0.75 }, svg);
+      txt(svg, (x0 + x1) / 2, by + bh + 46, narrow ? b[3] : b[2], on ? "lbl" : "lbl2", "middle");
+    });
+    [0, 5, 10, 15, 20, 27].forEach(function (t) {
+      var x = t === 0 ? X(0) : t === 27 ? X(27) : X(t - 0.5);
+      txt(svg, x, by + bh + 28, String(t), "ax", t === 0 ? "start" : t === 27 ? "end" : "middle");
+    });
+    function anchor(x) { return x < 70 ? "start" : x > w - 70 ? "end" : "middle"; }
+    var px = X(s.pred);
+    el("path", { d: "M" + (px - 6) + "," + (by - 11) + " L" + (px + 6) + "," + (by - 11) + " L" + px + "," + (by - 2) + " Z", fill: cssVar("--ink") }, svg);
+    txt(svg, px, by - 17, "Hypothesis: " + s.pred, "lbl", anchor(px));
+    var mx = X(s.median);
+    el("circle", { cx: mx, cy: by + bh / 2, r: 7, fill: cssVar("--clay"), stroke: cssVar("--panel"), "stroke-width": 2 }, svg);
+    document.getElementById("sev-note").textContent = s.note;
+    /* median label sits beside the dot, on the side away from the triangle */
+    var side = s.median < s.pred ? -1 : 1;
+    var lx = mx + side * 12, la = side < 0 ? "end" : "start";
+    if (la === "start" && lx > w - 120) { lx = mx - 12; la = "end"; }
+    var t2 = txt(svg, lx, by + bh / 2 + 4, "Models' median: " + s.median, "lbl", la);
+    t2.setAttribute("paint-order", "stroke"); t2.setAttribute("stroke", cssVar("--panel")); t2.setAttribute("stroke-width", "4");
+  });
+  var segSev = document.querySelector("#fig-severity .seg");
+  segSev.querySelectorAll("button").forEach(function (b) {
+    b.addEventListener("click", function () { sev = b.dataset.sev; pressed(segSev, b); redrawSev(); });
+  });
+
+  /* ---------- 3. diversity ratio strip ---------- */
+  var MODELS = ["GPT-4o-mini", "GPT-4o", "GPT-4.1-nano", "GPT-4.1-mini", "GPT-4.1", "GPT-5-mini", "GPT-5.2", "GPT-5.4-mini",
+    "Claude Haiku 4.5", "Grok-4.1-fast", "Llama-3.3-70B", "Kimi-K2.5", "Mistral-Large-3", "Phi-4",
+    "Gemini 2.5 Flash-Lite", "Gemini 2.5 Flash", "Gemini 2.5 Pro"];
+  var REFS = [["PHQ-9", "NHANES"], ["PHQ-9", "COACH, clinical"], ["GAD-7", "NHIS"], ["K6", "NHIS"],
+    ["PHQ-15", "C19PRC-UK"], ["OCI-R", "C19PRC-UK"], ["ITQ", "C19PRC-UK"], ["EDE-Q", "Mexico"]];
+  /* real-to-model diversity ratio / number of totals behind it (paper, Table "gen-ratio"); fewer than five totals is not reported */
+  var RATIO_RAW = [
+    "4.5/13 4.0/12 4.4/11 3.1/15 2.1/8 2.0/9 1.5/13 2.9/8",
+    "3.5/17 3.2/13 3.9/12 3.8/15 2.4/11 2.3/10 1.5/13 3.0/9",
+    "3.5/17 3.2/12 5.0/14 5.6/14 2.9/11 2.8/13 3.6/12 4.0/14",
+    "4.7/18 4.4/13 5.2/13 5.1/15 3.3/11 3.2/10 3.3/14 3.8/11",
+    "8.6/16 8.0/10 5.4/15 4.3/14 5.1/7 4.0/14 2.5/14 5.0/13",
+    "6.9/15 6.8/11 6.5/13 6.1/13 4.3/11 4.0/10 3.6/13 5.5/12",
+    "11.2/14 8.2/10 10.7/14 10.0/12 4.6/8 4.2/13 4.3/12 5.2/9",
+    "7.4/18 6.1/13 10.1/11 8.1/14 5.4/10 3.2/16 4.1/15 4.6/12",
+    "8.7/14 7.1/13 6.4/12 6.0/12 4.0/9 4.1/13 3.1/11 4.8/15",
+    "5.0/17 4.2/13 5.6/16 2.5/16 2.2/9 2.4/13 1.9/15 4.6/14",
+    "6.8/13 5.7/11 9.7/13 4.4/13 3.3/10 2.9/16 2.3/13 4.9/6",
+    "7.6/16 6.8/12 5.3/15 4.5/14 2.3/6 2.8/14 2.6/11 4.2/13",
+    "5.7/16 4.9/13 6.4/13 4.8/12 2.5/8 2.9/13 2.4/13 5.4/10",
+    "4.2/14 4.2/9 4.7/12 3.2/14 3.1/3 2.7/8 2.1/12 2.7/9",
+    "4.0/16 3.8/13 4.1/11 2.7/17 2.3/9 2.1/11 1.5/11 3.3/15",
+    "5.4/17 4.8/12 4.1/12 3.7/16 3.1/8 2.0/14 2.1/12 4.5/9",
+    "4.6/18 4.0/13 4.5/14 4.0/15 2.7/8 2.1/13 2.2/12 4.2/8"
+  ];
+  var RATIO = RATIO_RAW.map(function (r) {
+    return r.split(" ").map(function (c) { var p = c.split("/"); var v = +p[0], n = +p[1]; return n >= 5 ? { v: v, n: n } : null; });
+  });
+  var divSel = document.getElementById("div-model");
+  MODELS.forEach(function (m, i) { var o = document.createElement("option"); o.value = i; o.textContent = m; divSel.appendChild(o); });
+  var divPick = -1;
+  var divHost = document.getElementById("div-chart");
+  var redrawDiv = responsive(divHost, function (w) {
+    divHost.innerHTML = "";
+    var narrow = w < 560, L = narrow ? 92 : 140, R = narrow ? 30 : 44, T = 30, rowH = narrow ? 42 : 46, B = 30;
+    var H = T + REFS.length * rowH + B;
+    var svg = el("svg", { width: w, height: H, viewBox: "0 0 " + w + " " + H, role: "img",
+      "aria-label": "Real-to-model diversity ratio for 17 models on eight references; every ratio is above 1." }, divHost);
+    var x0 = L + 8, x1 = w - R, X = function (v) { return x0 + Math.log(v) / Math.log(16) * (x1 - x0); };
+    [1, 2, 4, 8, 16].forEach(function (t) {
+      el("line", { x1: X(t), x2: X(t), y1: T - 4, y2: T + REFS.length * rowH, "class": t === 1 ? "refl" : "gridl" }, svg);
+      txt(svg, X(t), H - 8, t + "×", "ax", "middle");
+    });
+    txt(svg, X(1) + 6, T - 12, "1× = as varied as real respondents", "ax", "start");
+    var clay = cssVar("--clay"), ink3 = cssVar("--ink-3"), panel = cssVar("--panel");
+    var top = [];
+    REFS.forEach(function (ref, r) {
+      var cy = T + r * rowH + rowH / 2;
+      el("line", { x1: x0, x2: x1, y1: cy, y2: cy, "class": "gridl", "stroke-opacity": 0.6 }, svg);
+      txt(svg, L - 8, cy - 2, ref[0], "lbl", "end");
+      txt(svg, L - 8, cy + 12, ref[1], "lbl2", "end");
+      var pts = [];
+      MODELS.forEach(function (m, i) { var c = RATIO[i][r]; if (c) pts.push({ i: i, v: c.v, n: c.n, x: X(c.v) }); });
+      pts.sort(function (a, b) { return a.v - b.v; });
+      var placed = [], OFF = [0, -7, 7, -14, 14];
+      pts.forEach(function (p) {
+        for (var k = 0; k < OFF.length; k++) {
+          var ok = placed.every(function (q) { return q.o !== OFF[k] || Math.abs(q.x - p.x) > 9; });
+          if (ok || k === OFF.length - 1) { p.o = OFF[k]; break; }
+        }
+        placed.push(p);
+      });
+      pts.forEach(function (p) {
+        var sel = p.i === divPick;
+        var tipHtml = "<b>" + MODELS[p.i] + "</b><br>" + ref[0] + ", " + ref[1] + "<br>Real respondents vary " + p.v.toFixed(1) + "× more<br>" + p.n + " totals";
+        if (sel) { top.push({ p: p, cy: cy, tip: tipHtml }); return; }
+        el("circle", { cx: p.x, cy: cy + p.o, r: 4.6, fill: divPick < 0 ? clay : ink3, "fill-opacity": divPick < 0 ? 0.72 : 0.32 }, svg);
+        var hit = el("circle", { cx: p.x, cy: cy + p.o, r: 9, "class": "hit" }, svg);
+        hover(hit, tipHtml);
+        hit.addEventListener("click", function () { divPick = p.i; divSel.value = p.i; redrawDiv(); });
+      });
+    });
+    top.forEach(function (o) {
+      el("circle", { cx: o.p.x, cy: o.cy, r: 6.5, fill: clay, stroke: panel, "stroke-width": 2 }, svg);
+      txt(svg, o.p.x + 11, o.cy + 4, o.p.v.toFixed(1) + "×", "lbl", "start");
+      var hit = el("circle", { cx: o.p.x, cy: o.cy, r: 10, "class": "hit" }, svg);
+      hover(hit, o.tip);
+    });
+  });
+  divSel.addEventListener("change", function () { divPick = +divSel.value; redrawDiv(); });
+  (function () {
+    var t = "<table class='tbl'><thead><tr><th>Model</th>" + REFS.map(function (r) { return "<th class='n'>" + r[0] + "<br><span style='font-weight:400'>" + r[1] + "</span></th>"; }).join("") + "</tr></thead><tbody>";
+    MODELS.forEach(function (m, i) {
+      t += "<tr><td>" + m + "</td>" + RATIO[i].map(function (c) { return "<td class='n'>" + (c ? c.v.toFixed(1) : "–") + "</td>"; }).join("") + "</tr>";
+    });
+    document.getElementById("div-table").innerHTML = t + "</tbody></table>";
+  })();
+
+  /* ---------- range charts: composition and entropy ---------- */
+  function rangeChart(hostId, rows, domain, ticks, fmt, unit) {
+    var host = document.getElementById(hostId);
+    responsive(host, function (w) {
+      host.innerHTML = "";
+      var narrow = w < 560, L = narrow ? 104 : 150, R = 26, lineH = 24, headH = 24, gap = 18, T = 4, B = 28;
+      var H = T + rows.length * (headH + 2 * lineH + gap) - gap + B + 8;
+      var svg = el("svg", { width: w, height: H, viewBox: "0 0 " + w + " " + H, role: "img", "aria-label": rows.map(function (r) { return r.label; }).join("; ") }, host);
+      var x0 = L, x1 = w - R, X = function (v) { return x0 + (v - domain[0]) / (domain[1] - domain[0]) * (x1 - x0); };
+      var yEnd = H - B;
+      ticks.forEach(function (t) {
+        el("line", { x1: X(t), x2: X(t), y1: T, y2: yEnd, "class": "gridl" }, svg);
+        txt(svg, X(t), H - 8, fmt(t) + (t === domain[1] || unit === "%" ? unit : ""), "ax", t === domain[0] ? "start" : t === domain[1] ? "end" : "middle");
+      });
+      var y = T;
+      rows.forEach(function (row) {
+        txt(svg, 0, y + 15, row.label, "lbl", "start");
+        y += headH;
+        [["Models", row.m, cssVar("--clay")], ["Real respondents", row.p, cssVar("--ink")]].forEach(function (s) {
+          var cy = y + lineH / 2;
+          txt(svg, L - 10, cy + 4, s[0], "lbl2", "end");
+          el("line", { x1: X(s[1][0]), x2: X(s[1][1]), y1: cy, y2: cy, stroke: s[2], "stroke-width": 9, "stroke-linecap": "round" }, svg);
+          var label = fmt(s[1][0]) + "–" + fmt(s[1][1]) + unit;
+          var rx = X(s[1][1]) + 10, an = "start";
+          if (rx > w - 64) { rx = X(s[1][0]) - 10; an = "end"; }
+          txt(svg, rx, cy + 4, label, "val", an);
+          y += lineH;
+        });
+        y += gap;
+      });
+    });
+  }
+  rangeChart("comp-chart", [
+    { label: "Responses endorsing every item", m: [99, 100], p: [47, 62] },
+    { label: "“Not at all” answers", m: [0, 4.5], p: [10, 15] }
+  ], [0, 100], [0, 25, 50, 75, 100], function (v) { return String(v); }, "%");
+  rangeChart("ent-chart", [
+    { label: "Entropy of an item's answers", m: [0.29, 0.73], p: [1.15, 1.51] }
+  ], [0, 2], [0, 0.5, 1, 1.5, 2], function (v) { return v === 0 || v === 1 || v === 2 ? String(v) : v.toFixed(2).replace(/0$/, ""); }, " bits");
+
+  /* ---------- 4. feigners ---------- */
+  /* ratio of "not at all" answers to genuinely injured students at the same totals, 95% interval, group % and genuine % (paper, PCL-5 table) */
+  var FEIGN = [
+    ["Uninjured, honest", 0.99, 0.91, 1.09, 55.4, 56.2, 1],
+    ["Told to feign", 0.90, 0.75, 1.03, 27.9, 31.2, 1],
+    ["GPT-4o-mini", 0.02, 0.00, 0.08, 0.2, 6.7], ["GPT-4o", 0.02, 0.00, 0.08, 0.1, 4.2],
+    ["GPT-4.1-nano", 0.09, 0.03, 0.18, 0.7, 7.2], ["GPT-4.1-mini", 0.01, 0.00, 0.05, 0.1, 5.9],
+    ["GPT-4.1", 0.00, 0.00, 0.00, 0.0, 6.9], ["GPT-5-mini", 0.03, 0.00, 0.07, 0.2, 5.7],
+    ["GPT-5.2", 0.03, 0.00, 0.07, 0.2, 8.8], ["GPT-5.4-mini", 0.09, 0.03, 0.14, 0.8, 9.3],
+    ["Claude Haiku 4.5", 0.18, 0.11, 0.28, 3.2, 17.2], ["Grok-4.1-fast", 0.28, 0.14, 0.46, 1.4, 5.0],
+    ["Llama-3.3-70B", 0.15, 0.07, 0.27, 1.2, 8.1], ["Kimi-K2.5", 0.13, 0.05, 0.24, 1.1, 8.2],
+    ["Mistral-Large-3", 0.02, 0.00, 0.07, 0.2, 6.9], ["Phi-4", 0.19, 0.09, 0.34, 1.0, 5.3],
+    ["Gemini 2.5 Flash-Lite", 0.31, 0.18, 0.49, 2.5, 7.9], ["Gemini 2.5 Flash", 0.04, 0.00, 0.44, 0.2, 4.1],
+    ["Gemini 2.5 Pro", 0.37, 0.22, 0.57, 3.2, 8.6]
+  ];
+  var people = FEIGN.filter(function (r) { return r[6]; });
+  var models = FEIGN.filter(function (r) { return !r[6]; }).sort(function (a, b) { return b[1] - a[1]; });
+  var feignHost = document.getElementById("feign-chart");
+  responsive(feignHost, function (w) {
+    feignHost.innerHTML = "";
+    var narrow = w < 560, L = narrow ? 124 : 164, R = 18, rowH = narrow ? 23 : 24, T = 30, grpH = 26, B = 28;
+    var H = T + grpH * 2 + (people.length + models.length) * rowH + 10 + B;
+    var svg = el("svg", { width: w, height: H, viewBox: "0 0 " + w + " " + H, role: "img",
+      "aria-label": "Ratio of not-at-all answers to genuine patients: people near 1, all models at most 0.37." }, feignHost);
+    var x0 = L, x1 = w - R, X = function (v) { return x0 + v / 1.15 * (x1 - x0); };
+    var yEnd = H - B;
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (t) {
+      el("line", { x1: X(t), x2: X(t), y1: T - 4, y2: yEnd, "class": t === 1 ? "refl" : "gridl" }, svg);
+      txt(svg, X(t), H - 8, t === 0 ? "0" : t === 1 ? "1" : String(t), "ax", "middle");
+    });
+    txt(svg, X(1) - 6, T - 12, "Same rate as genuine patients", "ax", "end");
+    var y = T;
+    function group(label, rows, color) {
+      txt(svg, 0, y + 17, label, "grp", "start");
+      y += grpH;
+      rows.forEach(function (r) {
+        var cy = y + rowH / 2;
+        txt(svg, L - 10, cy + 4, r[0], "lbl", "end");
+        if (r[3] > r[2]) el("line", { x1: X(r[2]), x2: X(r[3]), y1: cy, y2: cy, stroke: color, "stroke-width": 2, "stroke-linecap": "round", "stroke-opacity": 0.7 }, svg);
+        el("circle", { cx: X(r[1]), cy: cy, r: 4.8, fill: color, stroke: cssVar("--panel"), "stroke-width": 1.5 }, svg);
+        var hit = el("rect", { x: 0, y: y, width: w, height: rowH, "class": "hit" }, svg);
+        hover(hit, "<b>" + r[0] + "</b><br>Ratio " + r[1].toFixed(2) + " [" + r[2].toFixed(2) + ", " + r[3].toFixed(2) + "]<br>Answers “not at all” in " + r[4].toFixed(1) +
+          "% of items; genuine patients with the same totals, " + r[5].toFixed(1) + "%");
+        y += rowH;
+      });
+    }
+    group("People", people, cssVar("--ink"));
+    y += 10;
+    group(narrow ? "Models as an injured student" : "Models playing an injured student", models, cssVar("--clay"));
+  });
+  (function () {
+    var t = "<table class='tbl'><thead><tr><th>Group</th><th class='n'>Ratio</th><th class='n'>95% interval</th><th class='n'>“Not at all” (%)</th><th class='n'>Genuine, same totals (%)</th></tr></thead><tbody>";
+    people.concat(models).forEach(function (r) {
+      t += "<tr><td>" + r[0] + "</td><td class='n'>" + r[1].toFixed(2) + "</td><td class='n'>" + r[2].toFixed(2) + "–" + r[3].toFixed(2) + "</td><td class='n'>" + r[4].toFixed(1) + "</td><td class='n'>" + r[5].toFixed(1) + "</td></tr>";
+    });
+    document.getElementById("feign-table").innerHTML = t + "</tbody></table>";
+  })();
+
+  /* ---------- 5. remedies ---------- */
+  /* PHQ-9, seven models: median (range) of diversity as % of held-out real respondents and of AUC (paper, remedies table) */
+  var REM = [
+    { g: "Prompt changes" },
+    { l: "One-line severity persona", s: "One-line persona", d: [16, 9, 29], a: [0.81, 0.64, 0.88] },
+    { l: "+ “people with the same severity differ”", s: "+ people differ", d: [29, 26, 44], a: [0.84, 0.76, 0.87], ind: 1 },
+    { l: "+ a biography", d: [23, 17, 29], a: [0.80, 0.71, 0.86], ind: 1 },
+    { l: "Target total instead of a severity word", s: "Target total", d: [35, 27, 51], a: [0.69, 0.59, 0.82] },
+    { l: "+ five real answer sheets", s: "+ 5 real sheets", d: [48, 31, 57], a: [0.68, 0.57, 0.69], ind: 1 },
+    { g: "Published personas" },
+    { l: "TalkDep personas", s: "TalkDep", d: [41, 32, 50], a: [0.86, 0.75, 0.89] },
+    { l: "CACTUS intake forms", s: "CACTUS", d: [39, 33, 42], a: [0.88, 0.84, 0.92] },
+    { l: "+ case formulation", s: "+ case form.", d: [37, 32, 40], a: [0.91, 0.86, 0.93], ind: 1 }
+  ];
+  var metric = "div";
+  var remHost = document.getElementById("rem-chart");
+  var CAPS = {
+    div: ["Diversity, % of real respondents", "PHQ-9, seven models, median and range. Diversity of simulated patients as a percentage of held-out real respondents with the same totals; 100% means as varied as real respondents."],
+    auc: ["Separability from real respondents (AUC)", "PHQ-9, seven models, median and range. AUC of a classifier that tells simulated from held-out real responses with the same totals; 0.5 means they cannot be told apart."]
+  };
+  var redrawRem = responsive(remHost, function (w) {
+    remHost.innerHTML = "";
+    var isDiv = metric === "div", narrow = w < 600, L = narrow ? 128 : 262, R = 46, rowH = 28, grpH = 26, T = 30, B = 28;
+    var nRows = REM.filter(function (r) { return !r.g; }).length, nG = REM.length - nRows;
+    var H = T + nRows * rowH + nG * grpH + 8 + B;
+    var svg = el("svg", { width: w, height: H, viewBox: "0 0 " + w + " " + H, role: "img", "aria-label": CAPS[metric][0] }, remHost);
+    var dom = isDiv ? [0, 100] : [0.5, 1], ticks = isDiv ? [0, 25, 50, 75, 100] : [0.5, 0.6, 0.7, 0.8, 0.9, 1];
+    var x0 = L, x1 = w - R, X = function (v) { return x0 + (v - dom[0]) / (dom[1] - dom[0]) * (x1 - x0); };
+    var yEnd = H - B;
+    ticks.forEach(function (t) {
+      var isRef = isDiv ? t === 100 : t === 0.5;
+      el("line", { x1: X(t), x2: X(t), y1: T - 4, y2: yEnd, "class": isRef ? "refl" : "gridl" }, svg);
+      txt(svg, X(t), H - 8, isDiv ? t + "%" : t.toFixed(1), "ax", "middle");
+    });
+    if (isDiv) txt(svg, X(100) - 6, T - 12, "Real respondents", "ax", "end");
+    else txt(svg, X(0.5) + 6, T - 12, "Cannot be told apart from real", "ax", "start");
+    var y = T, clay = cssVar("--clay");
+    REM.forEach(function (r, idx) {
+      if (r.g) { if (idx) y += 8; txt(svg, 0, y + 17, r.g, "grp", "start"); y += grpH; return; }
+      var v = isDiv ? r.d : r.a, cy = y + rowH / 2;
+      var name = narrow && r.s ? r.s : r.l;
+      txt(svg, (r.ind ? 14 : 0), cy + 4, name, "lbl", "start");
+      el("line", { x1: X(v[1]), x2: X(v[2]), y1: cy, y2: cy, stroke: clay, "stroke-width": 3, "stroke-linecap": "round", "stroke-opacity": 0.55 }, svg);
+      el("circle", { cx: X(v[0]), cy: cy, r: 5.5, fill: clay, stroke: cssVar("--panel"), "stroke-width": 1.5 }, svg);
+      txt(svg, X(v[2]) + 9, cy + 4, isDiv ? v[0] + "%" : v[0].toFixed(2), "val", "start");
+      var hit = el("rect", { x: 0, y: y, width: w, height: rowH, "class": "hit" }, svg);
+      hover(hit, "<b>" + r.l + "</b><br>Diversity " + r.d[0] + "% of real (" + r.d[1] + "–" + r.d[2] + ")<br>AUC " + r.a[0].toFixed(2) + " (" + r.a[1].toFixed(2) + "–" + r.a[2].toFixed(2) + ")");
+      y += rowH;
+    });
+    document.getElementById("rem-title").textContent = CAPS[metric][0];
+    document.getElementById("rem-caption").textContent = CAPS[metric][1];
+  });
+  var segRem = document.querySelector("#fig-remedies .seg");
+  segRem.querySelectorAll("button").forEach(function (b) {
+    b.addEventListener("click", function () { metric = b.dataset.metric; pressed(segRem, b); redrawRem(); });
+  });
+  (function () {
+    var t = "<table class='tbl'><thead><tr><th>Condition</th><th class='n'>Diversity, % of real</th><th class='n'>AUC</th></tr></thead><tbody>";
+    REM.forEach(function (r) {
+      if (r.g) { t += "<tr><td colspan='3' style='font-weight:600;color:var(--ink-2)'>" + r.g + "</td></tr>"; return; }
+      t += "<tr><td>" + r.l + "</td><td class='n'>" + r.d[0] + " (" + r.d[1] + "–" + r.d[2] + ")</td><td class='n'>" + r.a[0].toFixed(2) + " (" + r.a[1].toFixed(2) + "–" + r.a[2].toFixed(2) + ")</td></tr>";
+    });
+    document.getElementById("rem-table").innerHTML = t + "</tbody></table>";
+  })();
+
+  /* ---------- 6. assessment agent ---------- */
+  /* % of interviews rated in the patient's severity band (paper, agent table) */
+  var AGENT = [
+    ["GPT-4o-mini", 25, 55], ["GPT-4.1", 26, null], ["Claude Haiku 4.5", 25, null], ["Llama-3.3-70B", 20, 45],
+    ["Gemini 2.5 Flash-Lite", 25, 42], ["Gemini 2.5 Flash", 26, 61], ["Gemini 2.5 Pro", 25, 59],
+    null,
+    ["Model rater, 64 transcripts", 33, 48, "Same transcripts the human raters saw"],
+    ["Human raters, 64 transcripts", 35, 56, "Mean over five raters; range 22–56% and 52–68%"]
+  ];
+  var agentHost = document.getElementById("agent-chart");
+  responsive(agentHost, function (w) {
+    agentHost.innerHTML = "";
+    var narrow = w < 560, L = narrow ? 132 : 200, R = 18, rowH = 28, T = 10, B = 28;
+    var H = T + (AGENT.length - 1) * rowH + 16 + B;
+    var svg = el("svg", { width: w, height: H, viewBox: "0 0 " + w + " " + H, role: "img",
+      "aria-label": "Share of interviews placed in the severity band: about a quarter for patients told a severity, about half for patients given a real profile." }, agentHost);
+    var x0 = L, x1 = w - R, X = function (v) { return x0 + v / 100 * (x1 - x0); };
+    var yEnd = H - B;
+    [0, 25, 50, 75, 100].forEach(function (t) {
+      el("line", { x1: X(t), x2: X(t), y1: T, y2: yEnd, "class": "gridl" }, svg);
+      txt(svg, X(t), H - 8, t + "%", "ax", t === 0 ? "start" : t === 100 ? "end" : "middle");
+    });
+    var y = T, clay = cssVar("--clay"), ink = cssVar("--ink"), panel = cssVar("--panel"), rule = cssVar("--ink-3");
+    AGENT.forEach(function (r) {
+      if (!r) { y += 16; el("line", { x1: 0, x2: w, y1: y - 8, y2: y - 8, "class": "gridl" }, svg); return; }
+      var cy = y + rowH / 2;
+      var name = narrow ? r[0].replace(", 64 transcripts", "") : r[0];
+      txt(svg, L - 10, cy + 4, name, "lbl", "end");
+      if (r[2] != null) el("line", { x1: X(r[1]), x2: X(r[2]), y1: cy, y2: cy, stroke: rule, "stroke-width": 2, "stroke-opacity": 0.5 }, svg);
+      el("circle", { cx: X(r[1]), cy: cy, r: 6, fill: clay, stroke: panel, "stroke-width": 1.5 }, svg);
+      if (r[2] != null) el("circle", { cx: X(r[2]), cy: cy, r: 6, fill: ink, stroke: panel, "stroke-width": 1.5 }, svg);
+      var hit = el("rect", { x: 0, y: y, width: w, height: rowH, "class": "hit" }, svg);
+      hover(hit, "<b>" + r[0] + "</b><br>Told a severity: " + r[1] + "%<br>Given a real profile: " + (r[2] == null ? "not run" : r[2] + "%") + (r[3] ? "<br>" + r[3] : ""));
+      y += rowH;
+    });
+  });
+})();
+</script>
+</body>
+</html>
