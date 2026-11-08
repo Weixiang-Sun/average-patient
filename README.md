@@ -4,7 +4,7 @@
 <p align="center">
   <a href="https://weixiang-sun.github.io/">Weixiang Sun</a><sup>1</sup>,
   <a href="https://zehong-wang.github.io/">Zehong Wang</a><sup>1†</sup>,
-  <a href="https://shiiiikw.github.io/">Kaiwang Shi</a><sup>1</sup>,
+  <a href="https://shiiiikw.github.io/">Kaiwen Shi</a><sup>1</sup>,
   <a href="https://hongh0.github.io/">Hong Huang</a><sup>2</sup>,
   <a href="https://www.linkedin.com/in/colby-p-nelson/">Colby Nelson</a><sup>1</sup>,
   <a href="https://yiyang-ian-li.github.io/">Yiyang Li</a><sup>1</sup>,
