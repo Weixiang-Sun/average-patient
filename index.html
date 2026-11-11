@@ -27,6 +27,7 @@
   --on-ink: #FAF9F5;
   --f-serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --f-ui: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --measure: 680px;
   --wide: 960px;
   color-scheme: light;
@@ -78,6 +79,13 @@ strong { font-weight: 600; }
 .btn[aria-disabled="true"] { background: transparent; color: var(--ink-3); border: 1px dashed var(--rule); cursor: default; }
 .btn small { font-size: .8125rem; color: inherit; opacity: .8; font-weight: 400; }
 .lede { font-size: 1.375rem; line-height: 1.5; margin-top: 44px; }
+
+/* citation */
+.bib { background: var(--panel); border-radius: 8px; padding: 12px 18px 16px; }
+.bib-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-family: var(--f-ui); font-size: .75rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+.bib-head button { font: 500 .8125rem/1 var(--f-ui); letter-spacing: 0; text-transform: none; padding: 7px 12px; border-radius: 6px; border: 1px solid var(--rule); background: var(--sheet); color: var(--ink-2); cursor: pointer; }
+.bib-head button:hover { color: var(--ink); border-color: var(--ink-2); }
+.bib pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: .8125rem/1.6 var(--f-mono); color: var(--ink); }
 
 /* sections */
 section { margin-top: 96px; }
@@ -203,7 +211,7 @@ pre.cite { font: 400 .8125rem/1.55 ui-monospace, "SFMono-Regular", Menlo, monosp
   </div>
   <div class="affil"><span><sup>1</sup>University of Notre Dame</span><span><sup>2</sup>Simon Fraser University</span><span><sup>†</sup>Corresponding authors</span></div>
   <div class="actions">
-    <span class="btn" aria-disabled="true">Paper <small>arXiv, coming soon</small></span>
+    <a class="btn" href="https://arxiv.org/abs/2611.11679">Paper <small>arXiv</small></a>
     <a class="btn" href="https://github.com/Weixiang-Sun/average-patient">Code</a>
     <a class="btn ghost" href="#citation">Citation</a>
   </div>
@@ -407,14 +415,22 @@ pre.cite { font: 400 .8125rem/1.55 ui-monospace, "SFMono-Regular", Menlo, monosp
 <section id="citation">
   <div class="col">
     <h2>Citation</h2>
-    <p>A BibTeX entry will be added with the arXiv version.</p>
+    <div class="bib">
+      <div class="bib-head"><span>BibTeX</span><button type="button" id="copy-bib">Copy</button></div>
+<pre id="bibtex">@article{sun2026average,
+  title={The Average Patient: Do Simulated Psychiatric Patients Answer Like Real People?},
+  author={Sun, Weixiang and Wang, Zehong and Shi, Kaiwen and Huang, Hong and Nelson, Colby and Li, Yiyang and Ye, Yanfang},
+  journal={arXiv preprint arXiv:2611.11679},
+  year={2026}
+}</pre>
+    </div>
   </div>
 </section>
 
 </main>
 <footer>
   <span>The Average Patient, 2026</span>
-  <span>Numbers on this page come from the paper's tables. <a href="https://github.com/Weixiang-Sun/average-patient">Code</a></span>
+  <span>Numbers on this page come from the paper's tables. <a href="https://arxiv.org/abs/2611.11679">Paper</a> · <a href="https://github.com/Weixiang-Sun/average-patient">Code</a></span>
 </footer>
 <div id="tip" role="tooltip"></div>
 
@@ -907,6 +923,23 @@ pre.cite { font: 400 .8125rem/1.55 ui-monospace, "SFMono-Regular", Menlo, monosp
       hover(hit, "<b>" + r[0] + "</b><br>Told a severity: " + r[1] + "%<br>Given a real profile: " + (r[2] == null ? "not run" : r[2] + "%") + (r[3] ? "<br>" + r[3] : ""));
       y += rowH;
     });
+  });
+})();
+</script>
+<script>
+(function () {
+  var btn = document.getElementById("copy-bib");
+  var src = document.getElementById("bibtex");
+  if (!btn || !src) return;
+  btn.addEventListener("click", function () {
+    var done = function () { btn.textContent = "Copied"; setTimeout(function () { btn.textContent = "Copy"; }, 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(src.textContent).then(done, function () { btn.textContent = "Select and copy"; });
+    } else {
+      var r = document.createRange(); r.selectNodeContents(src);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      btn.textContent = "Selected";
+    }
   });
 })();
 </script>
