@@ -13,7 +13,7 @@
 <p align="center"><sup>1</sup>University of Notre Dame &nbsp;&nbsp; <sup>2</sup>Simon Fraser University &nbsp;&nbsp; <sup>†</sup>Corresponding authors</p>
 
 <p align="center">
-  <a href="#"><img src="https://img.shields.io/badge/arXiv-coming%20soon-b31b1b?logo=arxiv&logoColor=white" alt="arXiv"></a>
+  <a href="https://arxiv.org/abs/2611.11679"><img src="https://img.shields.io/badge/arXiv-2611.11679-b31b1b?logo=arxiv&logoColor=white" alt="arXiv"></a>
   <a href="https://weixiang-sun.github.io/average-patient/"><img src="https://img.shields.io/badge/Project%20Page-average--patient-D97757?logo=googlechrome&logoColor=white" alt="Project Page"></a>
   <a href="https://github.com/Weixiang-Sun/average-patient"><img src="https://img.shields.io/badge/Code-GitHub-181717?logo=github&logoColor=white" alt="Code"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-2ecc71" alt="License: MIT"></a>
@@ -69,7 +69,14 @@ Model responses and the human ratings of interview transcripts are not released.
 
 ## Citation
 
-Coming soon.
+```bibtex
+@article{sun2026average,
+  title={The Average Patient: Do Simulated Psychiatric Patients Answer Like Real People?},
+  author={Sun, Weixiang and Wang, Zehong and Shi, Kaiwen and Huang, Hong and Nelson, Colby and Li, Yiyang and Ye, Yanfang},
+  journal={arXiv preprint arXiv:2611.11679},
+  year={2026}
+}
+```
 
 ## License
 
